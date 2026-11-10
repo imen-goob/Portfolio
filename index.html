@@ -1,0 +1,1070 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Imen Goob Portfolio</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* Layout: a fixed WebGL "embedding space" canvas sits behind one scrolling column.
+     Hero copy runs left, the 3D core floats right on wide screens and above the copy on phones. */
+  :root {
+    --bg: #080A11;
+    --bg-rgb: 8 10 17;
+    --fg: #E9ECF6;
+    --muted: #9AA1BA;
+    --line: rgb(170 182 230 / 0.16);
+    --panel: rgb(14 18 30 / 0.72);
+    --accent: #FF7A59;
+    --accent-ink: #1B0A05;
+    --ice: #8FB8FF;
+    --mint: #5FE3B0;
+    --lilac: #C7A0FF;
+    --f-display: "Syne", "Helvetica Neue", Arial, sans-serif;
+    --f-body: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --f-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    color-scheme: dark;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--f-body);
+    font-size: 16px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0 0 auto;
+    height: env(safe-area-inset-top, 0px);
+    background: var(--bg);
+    z-index: 30;
+  }
+  a { color: inherit; }
+  h1, h2, h3, p, dl, dd, ul, ol { margin: 0; }
+  ul, ol { padding: 0; list-style: none; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+  .wrap {
+    width: 100%;
+    max-width: 1160px;
+    margin-inline: auto;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+
+  #gl { position: fixed; inset: 0; width: 100%; height: 100%; display: block; z-index: 0; }
+  .veil {
+    position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    background: linear-gradient(90deg, rgb(var(--bg-rgb) / 0.9) 0%, rgb(var(--bg-rgb) / 0.58) 48%, rgb(var(--bg-rgb) / 0.12) 100%);
+  }
+  .page { position: relative; z-index: 2; overflow-x: clip; }
+
+  /* HUD */
+  .hud {
+    position: fixed; z-index: 5;
+    left: max(16px, env(safe-area-inset-left, 0px));
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    font-family: var(--f-mono); font-size: 0.72rem; color: var(--muted);
+    pointer-events: none;
+  }
+  .hud-title { display: block; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
+  .hud ul { display: flex; flex-direction: column; gap: 4px; }
+  .hud li { display: flex; align-items: center; gap: 8px; opacity: 0.55; transition: opacity 0.25s, color 0.25s; }
+  .hud li.on { opacity: 1; color: var(--fg); }
+  .hud i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+  /* Nav */
+  .nav {
+    position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
+    background: rgb(var(--bg-rgb) / 0.66);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav .wrap { display: flex; align-items: center; gap: 20px; height: 60px; }
+  .logo {
+    font-family: var(--f-display); font-weight: 800; font-size: 1.15rem;
+    letter-spacing: -0.02em; text-decoration: none; white-space: nowrap;
+  }
+  .logo span { color: var(--accent); }
+  .links { display: flex; gap: 4px; margin-left: auto; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+  .links::-webkit-scrollbar { display: none; }
+  .links a {
+    font-family: var(--f-mono); font-size: 0.78rem; color: var(--muted); text-decoration: none;
+    padding: 8px 10px; white-space: nowrap; transition: color 0.2s;
+  }
+  .links a:hover { color: var(--fg); }
+  .links a[aria-current="true"] { color: var(--fg); box-shadow: inset 0 -2px 0 var(--accent); }
+
+  /* Hero */
+  .hero { padding-block: clamp(56px, 10vw, 120px) clamp(72px, 10vw, 140px); }
+  .hero-copy { max-width: 640px; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-family: var(--f-mono); font-size: 0.78rem; line-height: 1.4;
+    border: 1px solid var(--line); background: var(--panel);
+    padding: 8px 14px; border-radius: 999px; margin-bottom: 28px;
+  }
+  .pulse { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--mint); animation: pulse 2.4s infinite; }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgb(95 227 176 / 0.55); }
+    70% { box-shadow: 0 0 0 10px rgb(95 227 176 / 0); }
+    100% { box-shadow: 0 0 0 0 rgb(95 227 176 / 0); }
+  }
+  .name {
+    font-family: var(--f-display); font-weight: 800;
+    font-size: clamp(3.6rem, 12vw, 8.6rem); line-height: 0.9; letter-spacing: -0.045em;
+    margin-bottom: 28px;
+  }
+  .name span {
+    background: linear-gradient(100deg, #FF7A59 10%, #FFC9B5 90%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    padding-right: 0.06em;
+  }
+  .role { font-size: clamp(1.05rem, 2vw, 1.3rem); color: var(--muted); max-width: 52ch; margin-bottom: 32px; }
+  .role { color: #C3C9DD; }
+  .cta { display: flex; flex-wrap: wrap; gap: 12px; }
+  .facts {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 20px 28px;
+    margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--line);
+  }
+  .facts dt { font-family: var(--f-mono); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+  .facts dd { margin-top: 4px; font-weight: 500; }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: var(--f-body); font-weight: 700; font-size: 0.95rem; line-height: 1;
+    padding: 14px 22px; border-radius: 8px; border: 1px solid var(--line);
+    background: rgb(255 255 255 / 0.03); color: var(--fg); text-decoration: none; cursor: pointer;
+    transition: transform 0.15s, background 0.2s, border-color 0.2s, filter 0.2s;
+  }
+  .btn:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .btn.primary:hover { filter: brightness(1.08); }
+  .btn.sm { padding: 9px 14px; font-size: 0.85rem; }
+
+  /* Sections */
+  .section { padding-block: clamp(56px, 9vw, 104px); scroll-margin-top: 60px; }
+  .sec-head {
+    display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px;
+    margin-bottom: clamp(24px, 4vw, 44px); padding-bottom: 18px; border-bottom: 1px solid var(--line);
+  }
+  h2 { font-family: var(--f-display); font-weight: 700; font-size: clamp(2rem, 5vw, 3.3rem); line-height: 1.05; letter-spacing: -0.03em; text-wrap: balance; }
+  .meta { font-family: var(--f-mono); font-size: 0.78rem; color: var(--muted); }
+
+  .about { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 40px 64px; }
+  .lead { font-size: clamp(1.25rem, 2.6vw, 1.75rem); line-height: 1.4; letter-spacing: -0.01em; max-width: 34ch; }
+  .wide-lead { max-width: 56ch; margin-bottom: 40px; }
+  .about-side { display: grid; gap: 16px; color: #C3C9DD; max-width: 56ch; align-content: start; }
+  .counts { display: flex; flex-wrap: wrap; gap: 20px 36px; margin-top: 16px; padding-top: 20px; border-top: 1px solid var(--line); }
+  .counts li { display: flex; flex-direction: column; }
+  .counts b { font-family: var(--f-display); font-size: 2.4rem; line-height: 1; letter-spacing: -0.03em; color: var(--fg); }
+  .counts span { font-family: var(--f-mono); font-size: 0.72rem; color: var(--muted); margin-top: 6px; }
+
+  /* Rows: experience, education, skills */
+  .rows { display: grid; }
+  .row, .skill-row {
+    display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 8px 32px;
+    padding: 28px 12px; margin-inline: -12px; border-bottom: 1px solid var(--line);
+    transition: background 0.25s;
+  }
+  .row:hover, .skill-row:hover { background: linear-gradient(90deg, rgb(255 255 255 / 0.035), transparent 80%); }
+  .when { font-family: var(--f-mono); font-size: 0.8rem; color: var(--muted); padding-top: 5px; }
+  .row-body { min-width: 0; }
+  .kind {
+    display: flex; align-items: center; gap: 8px;
+    font-family: var(--f-mono); font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
+  }
+  .kind::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--cc, var(--accent)); }
+  .row h3, .card h3 {
+    font-family: var(--f-display); font-weight: 700; font-size: clamp(1.25rem, 2.4vw, 1.65rem);
+    line-height: 1.2; letter-spacing: -0.02em; margin-top: 6px; text-wrap: balance;
+  }
+  .org { color: var(--muted); font-size: 0.95rem; margin-top: 2px; }
+  .row p, .card p { margin-top: 14px; max-width: 68ch; color: #C3C9DD; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .chip {
+    font-family: var(--f-mono); font-size: 0.74rem; line-height: 1.3; padding: 5px 10px;
+    border: 1px solid var(--line); border-radius: 6px; background: rgb(255 255 255 / 0.03);
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .chip:hover { border-color: var(--cc, var(--accent)); background: rgb(255 255 255 / 0.07); }
+  .skill-row { padding-block: 22px; }
+  .skill-row .when { color: var(--fg); font-size: 0.85rem; }
+  .skill-row .chips { margin-top: 0; }
+
+  /* Project cards */
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); gap: 20px; }
+  .card {
+    position: relative; display: flex; flex-direction: column; min-width: 0;
+    padding: 28px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    transition: transform 0.18s ease-out, border-color 0.25s; will-change: transform;
+  }
+  .card::before {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity 0.25s;
+    background: radial-gradient(300px circle at var(--gx, 50%) var(--gy, 0%), rgb(255 255 255 / 0.08), transparent 70%);
+  }
+  .card:hover { border-color: var(--cc); }
+  .card:hover::before { opacity: 1; }
+  .card .chips { margin-top: auto; padding-top: 20px; }
+  .card-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .card-top .when { padding-top: 0; }
+  .tag { display: inline-flex; align-items: center; gap: 8px; font-family: var(--f-mono); font-size: 0.74rem; }
+  .tag i { width: 8px; height: 8px; border-radius: 50%; background: var(--cc); }
+
+  /* Education extras */
+  .two { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); gap: 48px 64px; margin-top: 56px; }
+  .sub { font-family: var(--f-mono); font-weight: 500; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 8px; }
+  .cert { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 4px 16px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+  .cert .when { padding-top: 3px; }
+  .cert b { display: block; font-weight: 500; }
+  .cert em { display: block; font-style: normal; font-size: 0.9rem; color: var(--muted); }
+  .stack-col { display: grid; gap: 40px; align-content: start; }
+  .lang { display: grid; gap: 8px; padding: 12px 0; }
+  .lang-top { display: flex; justify-content: space-between; font-family: var(--f-mono); font-size: 0.85rem; }
+  .lang-top b { font-family: var(--f-body); font-weight: 500; font-size: 1rem; }
+  .lang-top span { color: var(--muted); }
+  .bar { height: 4px; background: var(--line); border-radius: 2px; }
+  .bar i { display: block; height: 100%; background: var(--accent); border-radius: 2px; }
+
+  /* Contact hub */
+  .hub { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+  .hub-cell { display: flex; align-items: center; gap: 16px; padding: 20px 22px; background: rgb(11 14 24 / 0.94); color: inherit; text-decoration: none; min-width: 0; transition: background 0.2s; }
+  .hub-link:hover { background: rgb(22 27 44 / 0.96); }
+  .hub-cell.span2 { grid-column: 1 / -1; }
+  .tile { flex: none; width: 56px; height: 56px; border-radius: 14px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid rgb(255 255 255 / 0.08); }
+  .cell-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .cell-text b { font-weight: 700; font-size: 1.02rem; line-height: 1.25; }
+  .cell-text span { font-family: var(--f-mono); font-size: 0.8rem; color: var(--muted); overflow-wrap: anywhere; }
+  .ext { flex: none; color: var(--muted); display: inline-flex; transition: color 0.2s, transform 0.2s; }
+  .hub-link:hover .ext { color: var(--fg); transform: translate(2px, -2px); }
+  .cell-act { flex: none; display: flex; align-items: center; gap: 10px; }
+  .note { font-family: var(--f-mono); font-size: 0.74rem; color: var(--mint); }
+  .btn.light { background: #E9ECF6; color: #0B0E18; border: 2px solid rgb(143 184 255 / 0.75); gap: 8px; }
+  .btn.light:hover { background: #fff; border-color: var(--ice); }
+  .btn svg { flex: none; }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+
+  /* Work sub-headings */
+  .sub em { font-style: normal; color: var(--fg); margin-left: 8px; }
+  .sub-gap { margin-top: 64px; margin-bottom: 20px; }
+  .rows + .sub-gap, .sub:first-child { margin-top: 0; }
+  .rows + .sub.sub-gap { margin-top: 64px; }
+
+  /* Certificate gallery */
+  .cert-tools { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 28px; }
+  .cert-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 18px; }
+  .cert-card { display: flex; flex-direction: column; min-width: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; transition: transform 0.2s, border-color 0.25s; }
+  .cert-card:hover { transform: translateY(-4px); border-color: var(--cc, var(--accent)); }
+  .cert-thumb { position: relative; display: block; width: 100%; aspect-ratio: 3 / 2; padding: 0; border: 0; border-bottom: 1px solid var(--line); background: #fff; cursor: pointer; overflow: hidden; }
+  .cert-thumb img { width: 100%; height: 100%; object-fit: cover; object-position: center top; display: block; transition: transform 0.4s ease; }
+  .cert-card:hover .cert-thumb img { transform: scale(1.04); }
+  .cert-view { position: absolute; inset: auto 10px 10px auto; display: inline-flex; align-items: center; gap: 6px; font-family: var(--f-mono); font-size: 0.74rem; padding: 6px 10px; border-radius: 6px; background: rgb(8 10 17 / 0.82); color: var(--fg); opacity: 0; transform: translateY(4px); transition: opacity 0.2s, transform 0.2s; }
+  .cert-thumb:hover .cert-view, .cert-thumb:focus-visible .cert-view { opacity: 1; transform: none; }
+  .cert-meta { display: flex; flex-direction: column; gap: 6px; padding: 16px 18px 18px; flex: 1; }
+  .issuer { font-family: var(--f-mono); font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .cert-meta h3 { font-family: var(--f-body); font-weight: 700; font-size: 1rem; line-height: 1.3; }
+  .cert-foot { display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 10px; }
+  .cert-foot .when { padding-top: 0; }
+  .pdf-link { font-family: var(--f-mono); font-size: 0.74rem; padding: 4px 10px; border: 1px solid var(--line); border-radius: 6px; text-decoration: none; transition: border-color 0.2s; }
+  .pdf-link:hover { border-color: var(--accent); }
+  @media (hover: none) { .cert-view { opacity: 1; transform: none; } }
+
+  /* Document viewer */
+  .viewer { position: fixed; inset: 0; z-index: 100; display: flex; flex-direction: column; background: rgb(6 8 14 / 0.94); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); animation: vin 0.22s ease-out; }
+  @keyframes vin { from { opacity: 0; } to { opacity: 1; } }
+  .v-bar { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px 20px; padding-top: calc(14px + env(safe-area-inset-top, 0px)); padding-bottom: 14px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); border-bottom: 1px solid var(--line); }
+  .v-title { min-width: 0; flex: 1 1 280px; display: flex; flex-direction: column; gap: 2px; }
+  .v-group { font-family: var(--f-mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
+  .v-name { font-family: var(--f-display); font-weight: 700; font-size: clamp(1.05rem, 2.4vw, 1.4rem); line-height: 1.2; letter-spacing: -0.01em; }
+  .v-sub { font-size: 0.85rem; color: var(--muted); }
+  .v-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .v-note { margin: 0; padding: 8px max(16px, env(safe-area-inset-right, 0px)) 8px max(16px, env(safe-area-inset-left, 0px)); font-family: var(--f-mono); font-size: 0.74rem; color: var(--muted); border-bottom: 1px solid var(--line); background: rgb(255 255 255 / 0.03); }
+  .v-body { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 24px max(16px, env(safe-area-inset-left, 0px)) 24px; }
+  .v-pages { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+  .v-pages img { width: 100%; max-width: 1040px; height: auto; background: #fff; border-radius: 4px; box-shadow: 0 24px 60px rgb(0 0 0 / 0.55); }
+  .v-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--line); background: rgb(8 10 17 / 0.8); color: var(--fg); font-size: 1.8rem; line-height: 1; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding-bottom: 4px; transition: border-color 0.2s, background 0.2s; z-index: 2; }
+  .v-arrow:hover { border-color: var(--accent); background: rgb(20 24 38 / 0.95); }
+  .v-arrow.prev { left: max(12px, env(safe-area-inset-left, 0px)); }
+  .v-arrow.next { right: max(12px, env(safe-area-inset-right, 0px)); }
+  .v-rail { position: relative; display: flex; gap: 10px; overflow-x: auto; padding: 12px max(16px, env(safe-area-inset-left, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--line); background: rgb(8 10 17 / 0.9); scrollbar-width: thin; }
+  .v-thumb { flex: none; width: 96px; aspect-ratio: 3 / 2; padding: 0; border: 2px solid transparent; border-radius: 6px; overflow: hidden; background: #fff; cursor: pointer; opacity: 0.55; transition: opacity 0.2s, border-color 0.2s; }
+  .v-thumb:hover { opacity: 0.9; }
+  .v-thumb.on { opacity: 1; border-color: var(--accent); }
+  .v-thumb img { width: 100%; height: 100%; object-fit: cover; object-position: center top; display: block; }
+
+  .foot { border-top: 1px solid var(--line); padding-block: 28px calc(28px + env(safe-area-inset-bottom, 0px)); font-family: var(--f-mono); font-size: 0.76rem; color: var(--muted); background: rgb(var(--bg-rgb) / 0.7); }
+  .foot .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; }
+
+  @media (max-width: 820px) {
+    .veil { background: rgb(var(--bg-rgb) / 0.55); }
+    .hero { padding-top: 300px; }
+    .about { grid-template-columns: minmax(0, 1fr); }
+    .hud { display: none; }
+  }
+  @media (max-width: 760px) {
+    .hub { grid-template-columns: minmax(0, 1fr); }
+    .hub-cell.span2 { grid-column: auto; }
+  }
+  @media (max-width: 640px) {
+    .row, .skill-row { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+    .card { padding: 22px; }
+    .hub-cell { flex-wrap: wrap; padding: 18px; }
+    .cell-act { width: 100%; justify-content: flex-start; padding-left: 72px; }
+    .v-arrow { top: auto; bottom: calc(96px + env(safe-area-inset-bottom, 0px)); transform: none; width: 44px; height: 44px; }
+    .v-thumb { width: 76px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+
+<div id="root"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const { useState, useEffect, useRef } = React;
+const REDUCE = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const CLUSTERS = [
+  { id: 0, name: "AI & RAG", color: "#FF7A59" },
+  { id: 1, name: "Web", color: "#8FB8FF" },
+  { id: 2, name: "Security", color: "#5FE3B0" },
+  { id: 3, name: "Mobile", color: "#C7A0FF" }
+];
+const EXPERIENCE = [
+  {
+    when: "Jul. 2026",
+    kind: "Internship",
+    title: "Artificial Intelligence and Software Development",
+    org: "Norma SAS \xB7 Gabes, Tunisia",
+    text: "Enhanced the KPIMaster Assistant module by implementing a Retrieval-Augmented Generation (RAG) architecture for intelligent information retrieval and response generation.",
+    stack: ["Python", "FastAPI", "ChromaDB", "PostgreSQL", "RAG", "React", "TypeScript", "Embeddings", "LLM", "Vector Search"],
+    c: 0,
+    doc: { group: "attest", id: "norma", label: "View attestation" }
+  },
+  {
+    when: "Aug. 2025",
+    kind: "Internship",
+    title: "iDaraty \xB7 Intelligent Chatbot for Tunisian Administrative Procedures",
+    org: "Tmkiin \xB7 Gabes, Tunisia",
+    text: "Design and development of a bilingual (French/Arabic) intelligent chatbot based on RAG and LangGraph, making it easier to access Tunisian administrative procedures and PDF forms, and to locate administrations through an interactive map, with a notification system to keep users informed.",
+    stack: ["Python", "LangGraph", "LLM", "RAG", "Embeddings"],
+    c: 0,
+    doc: { group: "attest", id: "tmkiin", label: "View attestation" }
+  },
+  {
+    when: "Jul. 2025",
+    kind: "Internship",
+    title: "Occupational Health Web Application",
+    org: "GIWS \xB7 Gabes, Tunisia",
+    text: "Developed GIWS Sante, a web platform for employee occupational health monitoring, including medical record management, medical visits, workplace accidents, and statistical reporting.",
+    stack: ["React", "Laravel", "MySQL", "Scrum"],
+    c: 1,
+    doc: { group: "attest", id: "giws", label: "View attestation" }
+  },
+  {
+    when: "Jun. 2025",
+    kind: "Freelance",
+    title: "Web Developer \xB7 Multi-Site Hotel Management System",
+    org: "Freelance project",
+    text: "Developed a complete web application for managing staff and tasks across a hotel chain. Implemented dashboards for administrators, receptionists, and staff, as well as internal messaging, real-time reporting, and secure authentication.",
+    stack: ["PHP", "MySQL", "JavaScript", "jQuery", "Bootstrap 5"],
+    c: 1
+  }
+];
+const PROJECTS = [
+  {
+    year: "2026",
+    title: "Plant Disease Detection with Deep Learning",
+    text: "Multi-class classification of plant diseases from leaf images using transfer learning (VGG16), with data augmentation and a comparison of fine-tuning strategies (accuracy, precision, recall, F1-score, confusion matrices).",
+    stack: ["Python", "TensorFlow", "Keras", "VGG16"],
+    c: 0
+  },
+  {
+    year: "2026",
+    title: "Arabic Spam Detection with NLP and Transformer Models",
+    text: "NLP pipeline for classifying Arabic tweets (spam / non-spam): text preprocessing, then comparison of TF-IDF, Word2Vec (CBOW, Skip-Gram), FastText and AraBERT (accuracy, precision, recall, F1-score, confusion matrices).",
+    stack: ["Python", "NLP", "AraBERT", "Word2Vec", "FastText", "Scikit-learn"],
+    c: 0
+  },
+  {
+    year: "2025",
+    title: "E-commerce Website \xB7 ASP.NET Core",
+    text: "Developed a complete e-commerce application featuring product catalog management, shopping cart, order and payment management, user management, and order history.",
+    stack: ["ASP.NET Core MVC", "Entity Framework Core", "SQL Server"],
+    c: 1
+  },
+  {
+    year: "2025",
+    title: "Real-Time Room Booking Mobile Application",
+    text: "Designed and developed a mobile application for real-time room reservations, including user management, reservation management, and availability tracking.",
+    stack: ["Flutter", "Dart", "Firebase", "REST API"],
+    c: 3
+  }
+];
+const SKILLS = [
+  { label: "AI & Data", c: 0, items: ["RAG", "LLM", "LangGraph", "LangChain", "ChromaDB", "FAISS", "NLP", "Transformers", "Embeddings", "Hugging Face", "Sentence Transformers", "Data Cleaning & Preprocessing", "Chunking", "TensorFlow"] },
+  { label: "Frameworks", c: 1, items: ["React.js", "React Native", "Flutter", "Node.js", "NestJS", "Laravel", "Django", "TensorFlow"] },
+  { label: "Languages", c: -1, items: ["JavaScript", "Dart", "PHP", "Python", "Java", "C", "C++", "SQL", "HTML/CSS"] },
+  { label: "Databases", c: 1, items: ["MySQL", "MongoDB", "PostgreSQL"] },
+  { label: "Cybersecurity", c: 2, items: ["Network security", "Cryptography", "Threat management"] },
+  { label: "Tools", c: -1, items: ["Git / GitHub", "VS Code", "Postman", "Docker", "Ollama", "UiPath"] },
+  { label: "Methodologies", c: -1, items: ["Agile", "Scrum", "UML", "DevOps"] }
+];
+const MOBILE_SKILLS = ["Flutter", "Dart", "React Native"];
+const chipCluster = (item, groupC) => MOBILE_SKILLS.indexOf(item) >= 0 ? 3 : item === "TensorFlow" ? 0 : groupC;
+const EDUCATION = [
+  {
+    when: "2024 \u2013 present",
+    title: "Engineering Degree \xB7 Software Engineering and Information Systems",
+    org: "Higher Institute of Computer Science and Multimedia of Gabes (ISIMG), Tunisia",
+    text: "Currently in the 3rd year.",
+    c: -1
+  },
+  {
+    when: "Sep. 2025 \u2013 Feb. 2026",
+    title: "Cybersecurity Bootcamp \xB7 CompTIA Security+ 701",
+    org: "GoMyCode, Tunisia",
+    text: "Intensive 6-month training covering network security, cryptography, threat management, risk assessment, and security compliance.",
+    stack: ["Cybersecurity", "CompTIA Security+", "Networking"],
+    c: 2,
+    doc: { group: "certs", id: "gomycode", label: "View certificate" }
+  },
+  {
+    when: "2022 \u2013 2024",
+    title: "Integrated Preparatory Cycle in Computer Science",
+    org: "Higher Institute of Computer Science and Multimedia of Gabes (ISIMG), Tunisia",
+    c: -1
+  },
+  {
+    when: "2022",
+    title: "Baccalaureate \xB7 Experimental Sciences",
+    org: "Ibn El Haytham High School, Ghannouch, Gabes, Tunisia",
+    c: -1
+  }
+];
+const CERT_DOCS = [
+  { id: "blockchain", title: "Blockchain Fundamentals", issuer: "Dar Blockchain \xB7 4Hacks", date: "Apr. 2026", c: 1 },
+  { id: "hcf", title: "Hedera Certified Foundation (HCF)", issuer: "The Hashgraph Association", date: "Apr. 2026", c: 1 },
+  { id: "hashgraph", title: "Hashgraph Developer Course", issuer: "The Hashgraph Association", date: "Mar. 2026", c: 1 },
+  { id: "hbf", title: "Hedera Business Foundation (HBF)", issuer: "The Hashgraph Association", date: "Mar. 2026", c: 1 },
+  { id: "gomycode", title: "Cyber Security Bootcamp: Certified CompTIA Security+ 701", issuer: "GoMyCode", date: "Feb. 2026", c: 2 },
+  { id: "ibm", title: "Python 101 for Data Science", issuer: "IBM \xB7 Cognitive Class", date: "Sep. 2025", c: 0 },
+  { id: "sfc", title: "Scrum Fundamentals Certified (SFC\u2122)", issuer: "SCRUMstudy", date: "Apr. 2025", c: -1 },
+  { id: "ncna", title: "Negotiation Associate (NCN-A\u2122)", issuer: "NGstudy", date: "Apr. 2025", c: -1 },
+  { id: "sodfc", title: "Scrum for Operations & DevOps Fundamentals Certified (SODFC)", issuer: "SCRUMstudy", date: "Apr. 2025", c: -1 },
+  { id: "nvidia", title: "Generative AI with Diffusion Models", issuer: "NVIDIA", date: "Apr. 2025", c: 0 }
+];
+const ATTEST_DOCS = [
+  { id: "norma", title: "Internship attestation \xB7 Norma SAS", issuer: "Norma SAS, Gabes", date: "01/07/2026 \u2013 31/07/2026" },
+  
+  { id: "tmkiin", title: "Internship attestation \xB7 Tmkiin", issuer: "Tmkiin, Gabes", date: "01/07/2025 \u2013 31/08/2025" },
+
+  { id: "giws", title: "Internship attestation \xB7 GIWS", issuer: "GIWS, Gabes", date: "01/07/2025 \u2013 31/07/2025" }
+];
+const GROUPS = {
+  cv: [
+    {
+      id: "cv",
+      title: "Resume \xB7 Imen Goob",
+      sub: "Software Engineering and Information Systems Engineering student",
+      pages: ["docs/cv-1.jpg", "docs/cv-2.jpg"],
+      pdf: "docs/Imen-Goob-Resume.pdf",
+      thumb: "docs/t/cv-1.jpg"
+    }
+  ],
+  certs: CERT_DOCS.map((d) => ({
+    id: d.id,
+    title: d.title,
+    sub: d.issuer + " \xB7 " + d.date,
+    pages: ["docs/" + d.id + ".jpg"],
+    pdf: "docs/" + d.id + ".pdf",
+    thumb: "docs/t/" + d.id + ".jpg"
+  })),
+  attest: ATTEST_DOCS.map((d) => ({
+    id: d.id,
+    title: d.title,
+    sub: d.issuer + " \xB7 " + d.date,
+    note: "The national ID number is hidden on this copy for privacy.",
+    pages: ["docs/" + d.id + ".jpg"],
+    pdf: "docs/" + d.id + ".pdf",
+    thumb: "docs/t/" + d.id + ".jpg"
+  }))
+};
+const GROUP_PDF = {
+  cv: "docs/Imen-Goob-Resume.pdf",
+  certs: "docs/Imen-Goob-Certificates.pdf",
+  attest: "docs/Imen-Goob-Internship-Attestations.pdf"
+};
+const GROUP_LABEL = { cv: "Resume", certs: "Certificates", attest: "Internship attestations" };
+const openDoc = (group, id) => {
+  const i = Math.max(0, GROUPS[group].findIndex((d) => d.id === id));
+  window.dispatchEvent(new CustomEvent("opendoc", { detail: { group, index: i } }));
+};
+const LANGS = [
+  { name: "Arabic", level: "Native", pct: 100 },
+  { name: "French", level: "B2", pct: 66 },
+  { name: "English", level: "B2", pct: 66 }
+];
+const ACTIVITIES = [
+  { when: "Jan. 2024 \u2013 present", name: "Active Member", org: "JCI Gabes \xB7 Junior Chamber International" },
+  { when: "May 2023 \u2013 present", name: "Member, IoT Club", org: "ISIM, Gabes" }
+];
+const NAV = [
+  ["about", "Profile"],
+  ["work", "Work"],
+  ["skills", "Skills"],
+  ["education", "Education"],
+  ["certificates", "Certificates"],
+  ["contact", "Contact"]
+];
+const bus = {
+  cluster: -1,
+  listeners: /* @__PURE__ */ new Set(),
+  set(c) {
+    if (this.cluster === c) return;
+    this.cluster = c;
+    this.listeners.forEach((fn) => fn(c));
+  }
+};
+const hover = (c) => ({ onMouseEnter: () => bus.set(c), onMouseLeave: () => bus.set(-1) });
+function go(e, id) {
+  e.preventDefault();
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: REDUCE ? "auto" : "smooth", block: "start" });
+}
+function rng(seed) {
+  return function() {
+    seed |= 0;
+    seed = seed + 1831565813 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function makeSprite() {
+  const c = document.createElement("canvas");
+  c.width = c.height = 64;
+  const g = c.getContext("2d");
+  const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gr.addColorStop(0, "rgba(255,255,255,1)");
+  gr.addColorStop(0.3, "rgba(255,255,255,0.75)");
+  gr.addColorStop(1, "rgba(255,255,255,0)");
+  g.fillStyle = gr;
+  g.fillRect(0, 0, 64, 64);
+  return new THREE.CanvasTexture(c);
+}
+function Scene() {
+  const ref = useRef(null);
+  useEffect(() => {
+    const canvas = ref.current;
+    let renderer;
+    try {
+      renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    } catch (err) {
+      canvas.style.display = "none";
+      return void 0;
+    }
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setClearColor(0, 0);
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 120);
+    camera.position.set(0, 0, 14);
+    const R = rng(7);
+    const gauss = () => {
+      let u = 0, v = 0;
+      while (!u) u = R();
+      while (!v) v = R();
+      return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+    };
+    const sprite = makeSprite();
+    const ADD = THREE.AdditiveBlending;
+    const cloud = new THREE.Group();
+    scene.add(cloud);
+    const centers = [[1, 0.45, -0.25], [-1, 0.25, -0.55], [0.1, -1, -0.35], [0.35, 0.85, -1]].map(
+      (v) => new THREE.Vector3(v[0], v[1], v[2]).normalize().multiplyScalar(8.2)
+    );
+    const groups = CLUSTERS.map((cl, i) => {
+      const n = 360;
+      const pos = new Float32Array(n * 3);
+      for (let j = 0; j < n; j++) {
+        pos[j * 3] = centers[i].x + gauss() * 1.9;
+        pos[j * 3 + 1] = centers[i].y + gauss() * 1.5;
+        pos[j * 3 + 2] = centers[i].z + gauss() * 1.9;
+      }
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+      const mat = new THREE.PointsMaterial({ color: cl.color, size: 0.22, map: sprite, transparent: true, opacity: 0.85, depthWrite: false, blending: ADD });
+      const pts = new THREE.Points(geo, mat);
+      const m = 70;
+      const lp = new Float32Array(m * 6);
+      for (let k = 0; k < m; k++) {
+        const s = k * 5;
+        lp[k * 6] = pos[s * 3];
+        lp[k * 6 + 1] = pos[s * 3 + 1];
+        lp[k * 6 + 2] = pos[s * 3 + 2];
+        lp[k * 6 + 3] = centers[i].x;
+        lp[k * 6 + 4] = centers[i].y;
+        lp[k * 6 + 5] = centers[i].z;
+      }
+      const lgeo = new THREE.BufferGeometry();
+      lgeo.setAttribute("position", new THREE.BufferAttribute(lp, 3));
+      const lmat = new THREE.LineBasicMaterial({ color: cl.color, transparent: true, opacity: 0.09, depthWrite: false, blending: ADD });
+      const lines = new THREE.LineSegments(lgeo, lmat);
+      const grp = new THREE.Group();
+      grp.add(pts);
+      grp.add(lines);
+      cloud.add(grp);
+      return { grp, mat, lmat, size: 0.22, sc: 1 };
+    });
+    const dustN = 600;
+    const dp = new Float32Array(dustN * 3);
+    for (let i = 0; i < dustN; i++) {
+      const r = 12 + R() * 16;
+      const th = R() * Math.PI * 2;
+      const ph = Math.acos(2 * R() - 1);
+      dp[i * 3] = r * Math.sin(ph) * Math.cos(th);
+      dp[i * 3 + 1] = r * Math.sin(ph) * Math.sin(th);
+      dp[i * 3 + 2] = r * Math.cos(ph) - 6;
+    }
+    const dgeo = new THREE.BufferGeometry();
+    dgeo.setAttribute("position", new THREE.BufferAttribute(dp, 3));
+    const dust = new THREE.Points(dgeo, new THREE.PointsMaterial({ color: 11187942, size: 0.09, map: sprite, transparent: true, opacity: 0.4, depthWrite: false, blending: ADD }));
+    scene.add(dust);
+    const core = new THREE.Group();
+    scene.add(core);
+    const coreMats = [];
+    const addCore = (mesh, base) => {
+      mesh.material.userData.base = base;
+      coreMats.push(mesh.material);
+      core.add(mesh);
+      return mesh;
+    };
+    const wire = (color, opacity) => new THREE.MeshBasicMaterial({ color, wireframe: true, transparent: true, opacity, depthWrite: false, blending: ADD });
+    const knot = addCore(new THREE.Mesh(new THREE.TorusKnotGeometry(1.55, 0.46, 200, 18, 2, 3), wire(16743001, 0.5)), 0.5);
+    const ico = addCore(new THREE.Mesh(new THREE.IcosahedronGeometry(0.95, 1), wire(9419007, 0.8)), 0.8);
+    const nucleus = new THREE.Sprite(new THREE.SpriteMaterial({ map: sprite, color: 16757145, transparent: true, opacity: 0.85, depthWrite: false, blending: ADD }));
+    nucleus.material.userData.base = 0.85;
+    nucleus.scale.set(3.4, 3.4, 1);
+    coreMats.push(nucleus.material);
+    core.add(nucleus);
+    const rings = [0, 1, 2].map((i) => {
+      const ring = addCore(
+        new THREE.Mesh(
+          new THREE.TorusGeometry(2.7 + i * 0.4, 8e-3, 8, 160),
+          new THREE.MeshBasicMaterial({ color: 9419007, transparent: true, opacity: 0.35, depthWrite: false, blending: ADD })
+        ),
+        0.35
+      );
+      ring.rotation.set(1.1 + i * 0.5, i * 0.7, i * 0.4);
+      return ring;
+    });
+    const orbiters = CLUSTERS.map((cl, i) => {
+      const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: sprite, color: cl.color, transparent: true, opacity: 1, depthWrite: false, blending: ADD }));
+      s.material.userData.base = 1;
+      s.scale.set(0.55, 0.55, 1);
+      coreMats.push(s.material);
+      core.add(s);
+      return { s, phase: i / 4 * Math.PI * 2, speed: 0.35 + i * 0.07, r: 2.95 + i % 2 * 0.3 };
+    });
+    const st = { mx: 0, my: 0, tx: 0, ty: 0, sc: 0, wide: true, ready: false };
+    const layout = () => {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      st.wide = w > 820 && w / h > 1;
+      if (!st.ready) {
+        core.position.set(st.wide ? 4.3 : 0, st.wide ? 0 : 3.1, 0);
+        core.scale.setScalar(st.wide ? 1 : 0.72);
+        st.ready = true;
+      }
+    };
+    const update = (time) => {
+      const k = (v) => REDUCE ? 1 : v;
+      st.mx += (st.tx - st.mx) * k(0.05);
+      st.my += (st.ty - st.my) * k(0.05);
+      st.sc += (window.scrollY - st.sc) * k(0.08);
+      const vh = window.innerHeight;
+      const p = Math.min(Math.max(st.sc / (vh * 0.9), 0), 1);
+      const total = Math.max(document.documentElement.scrollHeight - vh, 1);
+      const prog = Math.min(st.sc / total, 1);
+      cloud.rotation.y = time * 0.035 + prog * Math.PI * 1.4 + st.mx * 0.25;
+      cloud.rotation.x = st.my * 0.12 + Math.sin(time * 0.1) * 0.05 - prog * 0.3;
+      dust.rotation.y = -time * 0.01 + prog * 0.5;
+      const tx = st.wide ? 4.3 + p * 1.6 : 0;
+      const ty = st.wide ? -p * 0.8 : 3.1 + p * 1.8;
+      const ts = (st.wide ? 1 : 0.72) * (1 - p * 0.4);
+      core.position.x += (tx - core.position.x) * k(0.06);
+      core.position.y += (ty - core.position.y) * k(0.06);
+      core.scale.setScalar(core.scale.x + (ts - core.scale.x) * k(0.06));
+      knot.rotation.x = time * 0.25;
+      knot.rotation.y = time * 0.35 + st.mx * 0.6;
+      ico.rotation.y = -time * 0.5;
+      ico.rotation.x = time * 0.3 + st.my * 0.4;
+      rings.forEach((r, i) => {
+        r.rotation.z += REDUCE ? 0 : 15e-4 * (i + 1);
+      });
+      orbiters.forEach((o) => {
+        const a = time * o.speed + o.phase;
+        o.s.position.set(Math.cos(a) * o.r, Math.sin(a * 1.3) * o.r * 0.35, Math.sin(a) * o.r);
+      });
+      const co = 1 - p * 0.65;
+      coreMats.forEach((m) => {
+        m.opacity = m.userData.base * co;
+      });
+      const f = bus.cluster;
+      groups.forEach((g, i) => {
+        const on = i === f;
+        const tOp = f < 0 ? 0.85 : on ? 1 : 0.2;
+        const tSize = f < 0 ? 0.22 : on ? 0.32 : 0.15;
+        const tLine = f < 0 ? 0.09 : on ? 0.32 : 0.02;
+        const tSc = on ? 1.07 : 1;
+        g.mat.opacity += (tOp - g.mat.opacity) * k(0.1);
+        g.size += (tSize - g.size) * k(0.1);
+        g.mat.size = g.size;
+        g.lmat.opacity += (tLine - g.lmat.opacity) * k(0.1);
+        g.sc += (tSc - g.sc) * k(0.08);
+        g.grp.scale.setScalar(g.sc);
+      });
+      camera.position.x = st.mx * 0.6;
+      camera.position.y = -st.my * 0.4;
+      camera.lookAt(0, 0, 0);
+      renderer.render(scene, camera);
+    };
+    let raf = 0;
+    const loop = (t) => {
+      update(t * 1e-3);
+      raf = requestAnimationFrame(loop);
+    };
+    const onMove = (e) => {
+      st.tx = (e.clientX / window.innerWidth - 0.5) * 2;
+      st.ty = (e.clientY / window.innerHeight - 0.5) * 2;
+    };
+    const onResize = () => {
+      layout();
+      if (REDUCE) update(0);
+    };
+    const onStatic = () => update(0);
+    layout();
+    window.addEventListener("resize", onResize);
+    if (REDUCE) {
+      window.addEventListener("scroll", onStatic, { passive: true });
+      bus.listeners.add(onStatic);
+      update(0);
+    } else {
+      window.addEventListener("pointermove", onMove, { passive: true });
+      raf = requestAnimationFrame(loop);
+    }
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("scroll", onStatic);
+      window.removeEventListener("pointermove", onMove);
+      bus.listeners.delete(onStatic);
+      scene.traverse((o) => {
+        if (o.geometry) o.geometry.dispose();
+        if (o.material) o.material.dispose();
+      });
+      sprite.dispose();
+      renderer.dispose();
+    };
+  }, []);
+  return /* @__PURE__ */ React.createElement("canvas", { id: "gl", ref, "aria-hidden": "true" });
+}
+function Hud() {
+  const [c, setC] = useState(-1);
+  useEffect(() => {
+    bus.listeners.add(setC);
+    return () => bus.listeners.delete(setC);
+  }, []);
+  return /* @__PURE__ */ React.createElement("div", { className: "hud", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("span", { className: "hud-title" }, "Embedding space"), /* @__PURE__ */ React.createElement("ul", null, CLUSTERS.map((cl) => /* @__PURE__ */ React.createElement("li", { key: cl.id, className: c === cl.id ? "on" : "" }, /* @__PURE__ */ React.createElement("i", { style: { background: cl.color } }), cl.name))));
+}
+function Svg({ size, children, style }) {
+  return /* @__PURE__ */ React.createElement("svg", { viewBox: "0 0 24 24", width: size || 24, height: size || 24, fill: "none", stroke: "currentColor", strokeWidth: "1.8", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true", style }, children);
+}
+const IconEye = () => /* @__PURE__ */ React.createElement(Svg, { size: 16 }, /* @__PURE__ */ React.createElement("path", { d: "M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" }), /* @__PURE__ */ React.createElement("circle", { cx: "12", cy: "12", r: "3" }));
+const IconDoc = ({ size }) => /* @__PURE__ */ React.createElement(Svg, { size: size || 16 }, /* @__PURE__ */ React.createElement("path", { d: "M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" }), /* @__PURE__ */ React.createElement("path", { d: "M14 3v5h5M9 13h6M9 17h6" }));
+const IconExt = () => /* @__PURE__ */ React.createElement(Svg, { size: 20 }, /* @__PURE__ */ React.createElement("path", { d: "M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" }));
+function Tile({ bg, color, children }) {
+  return /* @__PURE__ */ React.createElement("span", { className: "tile", style: { background: bg, color: color || "#fff" } }, children);
+}
+function Nav({ active }) {
+  return /* @__PURE__ */ React.createElement("nav", { className: "nav", "aria-label": "Primary" }, /* @__PURE__ */ React.createElement("div", { className: "wrap" }, /* @__PURE__ */ React.createElement("a", { className: "logo", href: "#top", onClick: (e) => go(e, "top") }, "Imen", /* @__PURE__ */ React.createElement("span", null, "."), "Goob"), /* @__PURE__ */ React.createElement("div", { className: "links" }, NAV.map(([id, label]) => /* @__PURE__ */ React.createElement("a", { key: id, href: "#" + id, "aria-current": active === id ? "true" : void 0, onClick: (e) => go(e, id) }, label)))));
+}
+function Hero() {
+  return /* @__PURE__ */ React.createElement("header", { className: "hero wrap", id: "top" }, /* @__PURE__ */ React.createElement("div", { className: "hero-copy" }, /* @__PURE__ */ React.createElement("p", { className: "badge" }, /* @__PURE__ */ React.createElement("span", { className: "pulse" }), "Open to a final-year internship (PFE) starting in 2027"), /* @__PURE__ */ React.createElement("h1", { className: "name" }, "Imen", /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", null, "Goob")), /* @__PURE__ */ React.createElement("p", { className: "role" }, "Software Engineering and Information Systems Engineering student building RAG-powered AI, full-stack web applications and secure systems."), /* @__PURE__ */ React.createElement("div", { className: "cta" }, /* @__PURE__ */ React.createElement("a", { className: "btn primary", href: "#work", onClick: (e) => go(e, "work") }, "View projects"), /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn", onClick: () => openDoc("cv", "cv") }, /* @__PURE__ */ React.createElement(IconEye, null), " Resume"), /* @__PURE__ */ React.createElement("a", { className: "btn", href: "#contact", onClick: (e) => go(e, "contact") }, "Get in touch")), /* @__PURE__ */ React.createElement("dl", { className: "facts" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("dt", null, "Based in"), /* @__PURE__ */ React.createElement("dd", null, "Gabes, Tunisia")), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("dt", null, "Studying at"), /* @__PURE__ */ React.createElement("dd", null, "ISIMG \xB7 3rd-year engineering")), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("dt", null, "Focus"), /* @__PURE__ */ React.createElement("dd", null, "AI \xB7 Web \xB7 Security")))));
+}
+function Section({ id, title, meta, children }) {
+  return /* @__PURE__ */ React.createElement("section", { id, className: "section" }, /* @__PURE__ */ React.createElement("div", { className: "wrap" }, /* @__PURE__ */ React.createElement("div", { className: "sec-head" }, /* @__PURE__ */ React.createElement("h2", null, title), meta && /* @__PURE__ */ React.createElement("span", { className: "meta" }, meta)), children));
+}
+function Chips({ items }) {
+  return /* @__PURE__ */ React.createElement("ul", { className: "chips" }, items.map((i) => /* @__PURE__ */ React.createElement("li", { key: i, className: "chip" }, i)));
+}
+function Row({ when, kind, title, org, text, stack, c, doc }) {
+  const cl = c >= 0 ? CLUSTERS[c] : null;
+  return /* @__PURE__ */ React.createElement("li", { className: "row", style: cl ? { "--cc": cl.color } : void 0, ...c >= 0 ? hover(c) : {} }, /* @__PURE__ */ React.createElement("div", { className: "when" }, when), /* @__PURE__ */ React.createElement("div", { className: "row-body" }, kind && /* @__PURE__ */ React.createElement("div", { className: "kind" }, kind), /* @__PURE__ */ React.createElement("h3", null, title), org && /* @__PURE__ */ React.createElement("div", { className: "org" }, org), text && /* @__PURE__ */ React.createElement("p", null, text), stack && /* @__PURE__ */ React.createElement(Chips, { items: stack }), doc && /* @__PURE__ */ React.createElement("div", { className: "actions" }, /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn sm", onClick: () => openDoc(doc.group, doc.id) }, /* @__PURE__ */ React.createElement(IconDoc, null), " ", doc.label))));
+}
+function About() {
+  return /* @__PURE__ */ React.createElement(Section, { id: "about", title: "Profile", meta: "ISIMG \xB7 Gabes, Tunisia" }, /* @__PURE__ */ React.createElement("div", { className: "about" }, /* @__PURE__ */ React.createElement("p", { className: "lead" }, "Software Engineering and Information Systems Engineering student at ISIMG, Tunisia, with a strong interest in full-stack web development, Artificial Intelligence, and cybersecurity."), /* @__PURE__ */ React.createElement("div", { className: "about-side" }, /* @__PURE__ */ React.createElement("p", null, "I am passionate about building innovative and practical software solutions, with hands-on experience in RAG-based AI applications, web development, and secure information systems."), /* @__PURE__ */ React.createElement("p", null, "I am seeking a final-year internship (PFE) starting in 2027 to contribute to challenging projects and further develop my technical expertise."), /* @__PURE__ */ React.createElement("ul", { className: "counts" }, /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("b", null, EXPERIENCE.length), /* @__PURE__ */ React.createElement("span", null, "professional experiences")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("b", null, PROJECTS.length), /* @__PURE__ */ React.createElement("span", null, "academic projects")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("b", null, CERT_DOCS.length), /* @__PURE__ */ React.createElement("span", null, "certificates"))))));
+}
+function Card({ p }) {
+  const ref = useRef(null);
+  const cl = CLUSTERS[p.c];
+  const move = (e) => {
+    if (e.pointerType === "touch") return;
+    const el = ref.current;
+    const r = el.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width;
+    const y = (e.clientY - r.top) / r.height;
+    el.style.setProperty("--gx", x * 100 + "%");
+    el.style.setProperty("--gy", y * 100 + "%");
+    if (!REDUCE) {
+      el.style.transform = "perspective(900px) rotateX(" + ((0.5 - y) * 7).toFixed(2) + "deg) rotateY(" + ((x - 0.5) * 9).toFixed(2) + "deg)";
+    }
+  };
+  const leave = () => {
+    ref.current.style.transform = "";
+    bus.set(-1);
+  };
+  return /* @__PURE__ */ React.createElement("li", { ref, className: "card", style: { "--cc": cl.color }, onPointerMove: move, onMouseEnter: () => bus.set(p.c), onMouseLeave: leave }, /* @__PURE__ */ React.createElement("div", { className: "card-top" }, /* @__PURE__ */ React.createElement("span", { className: "when" }, p.year), /* @__PURE__ */ React.createElement("span", { className: "tag" }, /* @__PURE__ */ React.createElement("i", null), cl.name)), /* @__PURE__ */ React.createElement("h3", null, p.title), /* @__PURE__ */ React.createElement("div", { className: "org" }, "Academic project, ISIMG"), /* @__PURE__ */ React.createElement("p", null, p.text), /* @__PURE__ */ React.createElement(Chips, { items: p.stack }));
+}
+function Work() {
+  return /* @__PURE__ */ React.createElement(Section, { id: "work", title: "Internships & Projects", meta: "Jun. 2025 \u2013 Jul. 2026" }, /* @__PURE__ */ React.createElement("h3", { className: "sub" }, "Internships & freelance ", /* @__PURE__ */ React.createElement("em", null, EXPERIENCE.length)), /* @__PURE__ */ React.createElement("ol", { className: "rows" }, EXPERIENCE.map((e) => /* @__PURE__ */ React.createElement(Row, { key: e.title, ...e }))), /* @__PURE__ */ React.createElement("h3", { className: "sub sub-gap" }, "Other projects ", /* @__PURE__ */ React.createElement("em", null, PROJECTS.length)), /* @__PURE__ */ React.createElement("ul", { className: "grid" }, PROJECTS.map((p) => /* @__PURE__ */ React.createElement(Card, { key: p.title, p }))));
+}
+function Skills() {
+  return /* @__PURE__ */ React.createElement(Section, { id: "skills", title: "Skills", meta: "Hover a skill to light up its cluster" }, /* @__PURE__ */ React.createElement("ul", { className: "rows skills" }, SKILLS.map((g) => /* @__PURE__ */ React.createElement("li", { key: g.label, className: "skill-row", ...hover(g.c) }, /* @__PURE__ */ React.createElement("div", { className: "when" }, g.label), /* @__PURE__ */ React.createElement("ul", { className: "chips" }, g.items.map((it) => {
+    const cc = chipCluster(it, g.c);
+    return /* @__PURE__ */ React.createElement(
+      "li",
+      {
+        key: it,
+        className: "chip",
+        style: cc >= 0 ? { "--cc": CLUSTERS[cc].color } : void 0,
+        onMouseEnter: () => bus.set(cc),
+        onMouseLeave: () => bus.set(g.c)
+      },
+      it
+    );
+  }))))));
+}
+function Education() {
+  return /* @__PURE__ */ React.createElement(Section, { id: "education", title: "Education", meta: "2022 \u2013 present" }, /* @__PURE__ */ React.createElement("ol", { className: "rows" }, EDUCATION.map((e) => /* @__PURE__ */ React.createElement(Row, { key: e.title, ...e }))), /* @__PURE__ */ React.createElement("div", { className: "two" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h3", { className: "sub" }, "Languages"), LANGS.map((l) => /* @__PURE__ */ React.createElement("div", { key: l.name, className: "lang" }, /* @__PURE__ */ React.createElement("div", { className: "lang-top" }, /* @__PURE__ */ React.createElement("b", null, l.name), /* @__PURE__ */ React.createElement("span", null, l.level)), /* @__PURE__ */ React.createElement("div", { className: "bar" }, /* @__PURE__ */ React.createElement("i", { style: { width: l.pct + "%" } }))))), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h3", { className: "sub" }, "Activities & engagement"), /* @__PURE__ */ React.createElement("ul", { className: "certs" }, ACTIVITIES.map((a) => /* @__PURE__ */ React.createElement("li", { key: a.org, className: "cert" }, /* @__PURE__ */ React.createElement("span", { className: "when" }, a.when), /* @__PURE__ */ React.createElement("span", null, /* @__PURE__ */ React.createElement("b", null, a.name), /* @__PURE__ */ React.createElement("em", null, a.org))))))));
+}
+function Certificates() {
+  return /* @__PURE__ */ React.createElement(Section, { id: "certificates", title: "Certificates", meta: CERT_DOCS.length + " certificates \xB7 PDF" }, /* @__PURE__ */ React.createElement("div", { className: "cert-tools" }, /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn primary sm", onClick: () => openDoc("certs", CERT_DOCS[0].id) }, /* @__PURE__ */ React.createElement(IconEye, null), " View all"), /* @__PURE__ */ React.createElement("a", { className: "btn sm", href: GROUP_PDF.certs, target: "_blank", rel: "noopener noreferrer" }, "All in one PDF")), /* @__PURE__ */ React.createElement("ul", { className: "cert-grid" }, CERT_DOCS.map((d) => /* @__PURE__ */ React.createElement("li", { key: d.id, className: "cert-card", style: d.c >= 0 ? { "--cc": CLUSTERS[d.c].color } : void 0, ...hover(d.c) }, /* @__PURE__ */ React.createElement("button", { type: "button", className: "cert-thumb", "aria-label": "View certificate: " + d.title, onClick: () => openDoc("certs", d.id) }, /* @__PURE__ */ React.createElement("img", { src: "docs/t/" + d.id + ".jpg", alt: "", loading: "lazy" }), /* @__PURE__ */ React.createElement("span", { className: "cert-view" }, /* @__PURE__ */ React.createElement(IconEye, null), " View")), /* @__PURE__ */ React.createElement("div", { className: "cert-meta" }, /* @__PURE__ */ React.createElement("span", { className: "issuer" }, d.issuer), /* @__PURE__ */ React.createElement("h3", null, d.title), /* @__PURE__ */ React.createElement("div", { className: "cert-foot" }, /* @__PURE__ */ React.createElement("span", { className: "when" }, d.date), /* @__PURE__ */ React.createElement("a", { className: "pdf-link", href: "docs/" + d.id + ".pdf", target: "_blank", rel: "noopener noreferrer" }, "PDF")))))));
+}
+function CopyBtn({ text, targetRef }) {
+  const [note, setNote] = useState("");
+  const flash = (m) => {
+    setNote(m);
+    setTimeout(() => setNote(""), 1800);
+  };
+  const doCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      flash("Copied");
+    } catch (err) {
+      try {
+        const sel = window.getSelection();
+        const range = document.createRange();
+        range.selectNodeContents(targetRef.current);
+        sel.removeAllRanges();
+        sel.addRange(range);
+        flash("Selected, press Ctrl+C");
+      } catch (e2) {
+        flash("Select and copy manually");
+      }
+    }
+  };
+  return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn sm light", onClick: doCopy }, "Copy"), /* @__PURE__ */ React.createElement("span", { className: "note", role: "status" }, note));
+}
+function LinkCell({ tile, name, sub, href }) {
+  return /* @__PURE__ */ React.createElement("a", { className: "hub-cell hub-link", href, target: "_blank", rel: "noopener noreferrer" }, tile, /* @__PURE__ */ React.createElement("span", { className: "cell-text" }, /* @__PURE__ */ React.createElement("b", null, name), /* @__PURE__ */ React.createElement("span", null, sub)), /* @__PURE__ */ React.createElement("span", { className: "ext" }, /* @__PURE__ */ React.createElement(IconExt, null)));
+}
+function ActionCell({ tile, name, sub, subRef, span, children }) {
+  return /* @__PURE__ */ React.createElement("div", { className: "hub-cell" + (span ? " span2" : "") }, tile, /* @__PURE__ */ React.createElement("span", { className: "cell-text" }, /* @__PURE__ */ React.createElement("b", null, name), /* @__PURE__ */ React.createElement("span", { ref: subRef }, sub)), /* @__PURE__ */ React.createElement("span", { className: "cell-act" }, children));
+}
+function Contact() {
+  const emailRef = useRef(null);
+  return /* @__PURE__ */ React.createElement(Section, { id: "contact", title: "Contact", meta: "Ghannouch, Gabes 6021, Tunisia" }, /* @__PURE__ */ React.createElement("p", { className: "lead wide-lead" }, "I am looking for a final-year internship (PFE) starting in 2027. If your team works on AI, full-stack development or secure systems, I would like to hear from you."), /* @__PURE__ */ React.createElement("div", { className: "hub" }, /* @__PURE__ */ React.createElement(
+    LinkCell,
+    {
+      href: "https://www.linkedin.com/in/imen-goob",
+      name: "LinkedIn",
+      sub: "@imen-goob",
+      tile: /* @__PURE__ */ React.createElement(Tile, { bg: "#0A66C2" }, /* @__PURE__ */ React.createElement("svg", { viewBox: "0 0 24 24", width: "30", height: "30", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("text", { x: "12", y: "17.5", textAnchor: "middle", fontFamily: "Arial, sans-serif", fontWeight: "700", fontSize: "15", fill: "#fff" }, "in")))
+    }
+  ), /* @__PURE__ */ React.createElement(
+    LinkCell,
+    {
+      href: "https://github.com/imengoob",
+      name: "GitHub",
+      sub: "@imengoob",
+      tile: /* @__PURE__ */ React.createElement(Tile, { bg: "#0D1117" }, /* @__PURE__ */ React.createElement(Svg, { size: 28 }, /* @__PURE__ */ React.createElement("circle", { cx: "6", cy: "6", r: "2.2" }), /* @__PURE__ */ React.createElement("circle", { cx: "6", cy: "18", r: "2.2" }), /* @__PURE__ */ React.createElement("circle", { cx: "18", cy: "8", r: "2.2" }), /* @__PURE__ */ React.createElement("path", { d: "M6 8.2v7.6M18 10.2c0 4-6 3-11 6" })))
+    }
+  ), /* @__PURE__ */ React.createElement(
+    ActionCell,
+    {
+      name: "Resume",
+      sub: "PDF \xB7 2 pages",
+      tile: /* @__PURE__ */ React.createElement(Tile, { bg: "#1C2B47", color: "#8FB8FF" }, /* @__PURE__ */ React.createElement(IconDoc, { size: 28 }))
+    },
+    /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn sm light", onClick: () => openDoc("cv", "cv") }, /* @__PURE__ */ React.createElement(IconEye, null), " Preview")
+  ), /* @__PURE__ */ React.createElement(
+    ActionCell,
+    {
+      name: "WhatsApp",
+      sub: "+216 21 605 978",
+      tile: /* @__PURE__ */ React.createElement(Tile, { bg: "#25D366" }, /* @__PURE__ */ React.createElement(Svg, { size: 28 }, /* @__PURE__ */ React.createElement("path", { d: "M12 3a9 9 0 0 0-7.7 13.6L3 21l4.5-1.2A9 9 0 1 0 12 3z" }), /* @__PURE__ */ React.createElement("path", { d: "M9 8.5c0 3.5 3 6.5 6.5 6.5l1-1.5-2-1-1 .8c-1-.4-2-1.4-2.4-2.4l.8-1-1-2z" })))
+    },
+    /* @__PURE__ */ React.createElement("a", { className: "btn sm light", href: "https://wa.me/21621605978", target: "_blank", rel: "noopener noreferrer" }, "Contact me")
+  ), /* @__PURE__ */ React.createElement(
+    ActionCell,
+    {
+      name: "Certificates",
+      sub: CERT_DOCS.length + " certificates \xB7 PDF",
+      tile: /* @__PURE__ */ React.createElement(Tile, { bg: "#2B2140", color: "#C7A0FF" }, /* @__PURE__ */ React.createElement(Svg, { size: 28 }, /* @__PURE__ */ React.createElement("circle", { cx: "12", cy: "9", r: "5" }), /* @__PURE__ */ React.createElement("path", { d: "M9 13.5 7.5 21 12 18.5 16.5 21 15 13.5" })))
+    },
+    /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn sm light", onClick: () => openDoc("certs", CERT_DOCS[0].id) }, /* @__PURE__ */ React.createElement(IconEye, null), " View all")
+  ), /* @__PURE__ */ React.createElement(
+    ActionCell,
+    {
+      name: "Internship attestations",
+      sub: ATTEST_DOCS.length + " attestations \xB7 PDF",
+      tile: /* @__PURE__ */ React.createElement(Tile, { bg: "#14342B", color: "#5FE3B0" }, /* @__PURE__ */ React.createElement(Svg, { size: 28 }, /* @__PURE__ */ React.createElement("rect", { x: "3", y: "7", width: "18", height: "13", rx: "2" }), /* @__PURE__ */ React.createElement("path", { d: "M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M3 13h18" })))
+    },
+    /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn sm light", onClick: () => openDoc("attest", ATTEST_DOCS[0].id) }, /* @__PURE__ */ React.createElement(IconEye, null), " View")
+  ), /* @__PURE__ */ React.createElement(
+    ActionCell,
+    {
+      span: true,
+      name: "Email",
+      sub: "imengoob@gmail.com",
+      subRef: emailRef,
+      tile: /* @__PURE__ */ React.createElement(Tile, { bg: "#3A2018", color: "#FF9C80" }, /* @__PURE__ */ React.createElement(Svg, { size: 28 }, /* @__PURE__ */ React.createElement("rect", { x: "3", y: "5", width: "18", height: "14", rx: "2" }), /* @__PURE__ */ React.createElement("path", { d: "m3 7 9 6 9-6" })))
+    },
+    /* @__PURE__ */ React.createElement(CopyBtn, { text: "imengoob@gmail.com", targetRef: emailRef })
+  )));
+}
+function Viewer() {
+  const [s, setS] = useState(null);
+  const bodyRef = useRef(null);
+  const railRef = useRef(null);
+  const dialogRef = useRef(null);
+  const closeBtn = useRef(null);
+  const opener = useRef(null);
+  const isOpen = !!s;
+  useEffect(() => {
+    const on = (e) => {
+      opener.current = document.activeElement;
+      setS(e.detail);
+    };
+    window.addEventListener("opendoc", on);
+    return () => window.removeEventListener("opendoc", on);
+  }, []);
+  const close = () => {
+    setS(null);
+    const el = opener.current;
+    if (el && el.focus) setTimeout(() => el.focus(), 0);
+  };
+  const step = (d) => setS((cur) => {
+    if (!cur) return cur;
+    const n2 = GROUPS[cur.group].length;
+    if (n2 < 2) return cur;
+    return { group: cur.group, index: (cur.index + d + n2) % n2 };
+  });
+  useEffect(() => {
+    if (!isOpen) return void 0;
+    document.documentElement.style.overflow = "hidden";
+    const key = (e) => {
+      if (e.key === "Escape") close();
+      else if (e.key === "ArrowRight") step(1);
+      else if (e.key === "ArrowLeft") step(-1);
+      else if (e.key === "Tab" && dialogRef.current) {
+        const f = dialogRef.current.querySelectorAll("a[href], button:not([disabled])");
+        if (!f.length) return;
+        const first = f[0];
+        const last = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    };
+    window.addEventListener("keydown", key);
+    if (closeBtn.current) closeBtn.current.focus();
+    return () => {
+      document.documentElement.style.overflow = "";
+      window.removeEventListener("keydown", key);
+    };
+  }, [isOpen]);
+  const idx = s ? s.index : -1;
+  const grp = s ? s.group : "";
+  useEffect(() => {
+    if (bodyRef.current) bodyRef.current.scrollTop = 0;
+    const rail = railRef.current;
+    if (rail) {
+      const on = rail.querySelector(".on");
+      if (on) rail.scrollLeft = on.offsetLeft - rail.clientWidth / 2 + on.clientWidth / 2;
+    }
+  }, [idx, grp]);
+  if (!s) return null;
+  const items = GROUPS[s.group];
+  const it = items[s.index];
+  const n = items.length;
+  return /* @__PURE__ */ React.createElement("div", { className: "viewer", role: "dialog", "aria-modal": "true", "aria-label": it.title, ref: dialogRef }, /* @__PURE__ */ React.createElement("div", { className: "v-bar" }, /* @__PURE__ */ React.createElement("div", { className: "v-title" }, /* @__PURE__ */ React.createElement("span", { className: "v-group" }, GROUP_LABEL[s.group], n > 1 ? " \xB7 " + (s.index + 1) + " / " + n : ""), /* @__PURE__ */ React.createElement("div", { className: "v-name" }, it.title), /* @__PURE__ */ React.createElement("span", { className: "v-sub" }, it.sub)), /* @__PURE__ */ React.createElement("div", { className: "v-actions" }, /* @__PURE__ */ React.createElement("a", { className: "btn sm", href: it.pdf, target: "_blank", rel: "noopener noreferrer" }, "Open PDF"), n > 1 && /* @__PURE__ */ React.createElement("a", { className: "btn sm", href: GROUP_PDF[s.group], target: "_blank", rel: "noopener noreferrer" }, "All as one PDF"), /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn sm light", ref: closeBtn, onClick: close }, "Close"))), it.note && /* @__PURE__ */ React.createElement("p", { className: "v-note" }, it.note), /* @__PURE__ */ React.createElement(
+    "div",
+    {
+      className: "v-body",
+      ref: bodyRef,
+      onClick: (e) => {
+        if (e.target === e.currentTarget) close();
+      }
+    },
+    /* @__PURE__ */ React.createElement("div", { className: "v-pages" }, it.pages.map((p, i) => /* @__PURE__ */ React.createElement("img", { key: p, src: p, alt: it.title + (it.pages.length > 1 ? " (page " + (i + 1) + ")" : "") })))
+  ), n > 1 && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("button", { type: "button", className: "v-arrow prev", "aria-label": "Previous document", onClick: () => step(-1) }, "\u2039"), /* @__PURE__ */ React.createElement("button", { type: "button", className: "v-arrow next", "aria-label": "Next document", onClick: () => step(1) }, "\u203A"), /* @__PURE__ */ React.createElement("div", { className: "v-rail", ref: railRef }, items.map((d, i) => /* @__PURE__ */ React.createElement(
+    "button",
+    {
+      key: d.id,
+      type: "button",
+      className: "v-thumb" + (i === s.index ? " on" : ""),
+      "aria-label": "Show " + d.title,
+      "aria-current": i === s.index ? "true" : void 0,
+      onClick: () => setS({ group: s.group, index: i })
+    },
+    /* @__PURE__ */ React.createElement("img", { src: d.thumb, alt: "" })
+  )))));
+}
+function App() {
+  const [active, setActive] = useState("");
+  useEffect(() => {
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) setActive(e.target.id);
+        });
+      },
+      { rootMargin: "-40% 0px -55% 0px" }
+    );
+    NAV.forEach(([id]) => {
+      const el = document.getElementById(id);
+      if (el) io.observe(el);
+    });
+    return () => io.disconnect();
+  }, []);
+  return /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Scene, null), /* @__PURE__ */ React.createElement("div", { className: "veil" }), /* @__PURE__ */ React.createElement(Hud, null), /* @__PURE__ */ React.createElement("div", { className: "page" }, /* @__PURE__ */ React.createElement(Nav, { active }), /* @__PURE__ */ React.createElement("main", null, /* @__PURE__ */ React.createElement(Hero, null), /* @__PURE__ */ React.createElement(About, null), /* @__PURE__ */ React.createElement(Work, null), /* @__PURE__ */ React.createElement(Skills, null), /* @__PURE__ */ React.createElement(Education, null), /* @__PURE__ */ React.createElement(Certificates, null), /* @__PURE__ */ React.createElement(Contact, null)), /* @__PURE__ */ React.createElement("footer", { className: "foot" }, /* @__PURE__ */ React.createElement("div", { className: "wrap" }, /* @__PURE__ */ React.createElement("span", null, "Imen Goob \xB7 Gabes, Tunisia"), /* @__PURE__ */ React.createElement("span", null, "Built with React and Three.js")))), /* @__PURE__ */ React.createElement(Viewer, null));
+}
+ReactDOM.createRoot(document.getElementById("root")).render(/* @__PURE__ */ React.createElement(App, null));
+
+</script>
+
+</body></html>
