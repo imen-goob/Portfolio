@@ -338,6 +338,17 @@ const CLUSTERS = [
   { id: 3, name: "Mobile", color: "#C7A0FF" }
 ];
 const EXPERIENCE = [
+ {
+    when: "2026",
+    kind: "Freelance",
+    title: "Maktabat Al-Nour \xB7 Multilingual Islamic E-Book Store",
+    org: "Freelance project",
+    text: "Designed and developed a premium multilingual (EN/AR/FR/TR) online store for Islamic e-books, with a book catalog, shopping cart, bundles and customer reviews.",
+    stack: ["HTML/CSS", "JavaScript", "Vercel"],
+    c: 1,
+    repo: "https://github.com/imengoob/Maktabat-alnour",
+    site: "https://maktabat-alnour.vercel.app/"
+  },
   {
     when: "Jul. 2026",
     kind: "Internship",
@@ -346,6 +357,8 @@ const EXPERIENCE = [
     text: "Enhanced the KPIMaster Assistant module by implementing a Retrieval-Augmented Generation (RAG) architecture for intelligent information retrieval and response generation.",
     stack: ["Python", "FastAPI", "ChromaDB", "PostgreSQL", "RAG", "React", "TypeScript", "Embeddings", "LLM", "Vector Search"],
     c: 0,
+      repo: "https://github.com/imengoob/KPIMaster",
+
     doc: { group: "attest", id: "norma", label: "View attestation" }
   },
   {
@@ -356,6 +369,8 @@ const EXPERIENCE = [
     text: "Design and development of a bilingual (French/Arabic) intelligent chatbot based on RAG and LangGraph, making it easier to access Tunisian administrative procedures and PDF forms, and to locate administrations through an interactive map, with a notification system to keep users informed.",
     stack: ["Python", "LangGraph", "LLM", "RAG", "Embeddings"],
     c: 0,
+        repo: "https://github.com/imengoob/idaraty",
+
     doc: { group: "attest", id: "tmkiin", label: "View attestation" }
   },
   {
@@ -808,9 +823,25 @@ function Section({ id, title, meta, children }) {
 function Chips({ items }) {
   return /* @__PURE__ */ React.createElement("ul", { className: "chips" }, items.map((i) => /* @__PURE__ */ React.createElement("li", { key: i, className: "chip" }, i)));
 }
-function Row({ when, kind, title, org, text, stack, c, doc }) {
+const IconGithub = () => React.createElement("svg", { viewBox: "0 0 24 24", width: 16, height: 16, fill: "currentColor", "aria-hidden": "true" }, React.createElement("path", { d: "M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" }));
+function Row({ when, kind, title, org, text, stack, c, doc, repo, site }) {
+  const h = React.createElement;
   const cl = c >= 0 ? CLUSTERS[c] : null;
-  return /* @__PURE__ */ React.createElement("li", { className: "row", style: cl ? { "--cc": cl.color } : void 0, ...c >= 0 ? hover(c) : {} }, /* @__PURE__ */ React.createElement("div", { className: "when" }, when), /* @__PURE__ */ React.createElement("div", { className: "row-body" }, kind && /* @__PURE__ */ React.createElement("div", { className: "kind" }, kind), /* @__PURE__ */ React.createElement("h3", null, title), org && /* @__PURE__ */ React.createElement("div", { className: "org" }, org), text && /* @__PURE__ */ React.createElement("p", null, text), stack && /* @__PURE__ */ React.createElement(Chips, { items: stack }), doc && /* @__PURE__ */ React.createElement("div", { className: "actions" }, /* @__PURE__ */ React.createElement("button", { type: "button", className: "btn sm", onClick: () => openDoc(doc.group, doc.id) }, /* @__PURE__ */ React.createElement(IconDoc, null), " ", doc.label))));
+  return h("li", { className: "row", style: cl ? { "--cc": cl.color } : void 0, ...(c >= 0 ? hover(c) : {}) },
+    h("div", { className: "when" }, when),
+    h("div", { className: "row-body" },
+      kind && h("div", { className: "kind" }, kind),
+      h("h3", null, title),
+      org && h("div", { className: "org" }, org),
+      text && h("p", null, text),
+      stack && h(Chips, { items: stack }),
+      (doc || repo || site) && h("div", { className: "actions" },
+        repo && h("a", { className: "btn sm", href: repo, target: "_blank", rel: "noopener noreferrer" }, h(IconGithub, null), "\u00A0GitHub"),
+        site && h("a", { className: "btn sm", href: site, target: "_blank", rel: "noopener noreferrer" }, h(IconExt, null), "\u00A0Live site"),
+        doc && h("button", { type: "button", className: "btn sm", onClick: () => openDoc(doc.group, doc.id) }, h(IconDoc, null), " ", doc.label)
+      )
+    )
+  );
 }
 function About() {
   return /* @__PURE__ */ React.createElement(Section, { id: "about", title: "Profile", meta: "ISIMG \xB7 Gabes, Tunisia" }, /* @__PURE__ */ React.createElement("div", { className: "about" }, /* @__PURE__ */ React.createElement("div", { className: "about-main" }, /* @__PURE__ */ React.createElement("img", { className: "about-photo", src: "docs/imen.jpg", alt: "Imen Goob", loading: "lazy" }), /* @__PURE__ */ React.createElement("p", { className: "lead" }, "Software Engineering and Information Systems Engineering student at ISIMG, Tunisia, with a strong interest in full-stack web development, Artificial Intelligence, and cybersecurity.")), /* @__PURE__ */ React.createElement("div", { className: "about-side" }, /* @__PURE__ */ React.createElement("p", null, "I am passionate about building innovative and practical software solutions, with hands-on experience in RAG-based AI applications, web development, and secure information systems."), /* @__PURE__ */ React.createElement("p", null, "I am seeking a final-year internship (PFE) starting in 2027 to contribute to challenging projects and further develop my technical expertise."), /* @__PURE__ */ React.createElement("ul", { className: "counts" }, /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("b", null, EXPERIENCE.length), /* @__PURE__ */ React.createElement("span", null, "professional experiences")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("b", null, PROJECTS.length), /* @__PURE__ */ React.createElement("span", null, "academic projects")), /* @__PURE__ */ React.createElement("li", null, /* @__PURE__ */ React.createElement("b", null, CERT_DOCS.length), /* @__PURE__ */ React.createElement("span", null, "certificates"))))));
